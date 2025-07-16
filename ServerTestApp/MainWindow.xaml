@@ -1,0 +1,22 @@
+﻿<Window x:Class="ServerTestApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ServerTestApp"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"></ColumnDefinition>
+            <ColumnDefinition></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <StackPanel Width="100" Margin="8">
+            <Button Click="Button_Click">Connect</Button>
+            <Button Click="Button_Click_3" Margin="0 8 0 0">Send test cmd</Button>
+            <Button Click="Button_Click_1" Margin="0 8 0 0">Run Simulation</Button>
+            <Button Click="Button_Click_2" Margin="0 8 0 0">Reset Simulation</Button>
+        </StackPanel>
+        <TextBox Grid.Column="1" x:Name="log" VerticalScrollBarVisibility="Auto"></TextBox>
+    </Grid>
+</Window>
