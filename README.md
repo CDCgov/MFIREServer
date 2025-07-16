@@ -6,8 +6,8 @@ MFIRE Server is a supplemental program for the VR Mine Rescue Training Platform.
 Please follow the link here to the VR-MRT repository: [VR-MRT](https://github.com/CDCgov/vr-mine-rescue-training)
 
 ## Installing MFIRE Server
-* VR-MRT build/executable: Copy the MFIREServer folder into the same folder as your VR-MRT build or executable folder within Windows Explorer
-* Unity Project: Copy the MFIREServer folder into the project folder of your Unity Project, not within the "Aseets" folder underneath
+* VR-MRT build/executable: Copy the MFIREServerExecutable folder into the same folder as your VR-MRT build or executable folder within Windows Explorer
+* Unity Project: Copy the MFIREServerExecutable folder into the project folder of your Unity Project, not within the "Aseets" folder underneath
 
 ## How to Use MFIRE Server
 * Before running VR-MRT, run "MFireServer.exe"
