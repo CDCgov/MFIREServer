@@ -1,6 +1,6 @@
 # MFIRE Server
 ## Overview
-MFIRE Server is a supplemental program for the VR Mine Rescue Training Platform. It runs a standalone instance of MFIRE which links to nodes created by the scenarios within VR-MRT.
+MFIRE Server is a supplemental program for the VR Mine Rescue Training (VR-MRT) Platform. It runs a standalone instance of [MFIRE] (https://www.cdc.gov/niosh/mining/tools/mfire.html) that takes the node-based ventilation network created in VR-MRT and runs a step-wise simulation to calculate the atmospheric changes over time and provides updates for the active VR-MRT simulation.
 
 ## Link to VR-MRT
 Please follow the link here to the VR-MRT repository: [VR-MRT](https://github.com/CDCgov/vr-mine-rescue-training)
