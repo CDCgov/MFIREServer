@@ -42,7 +42,8 @@ namespace MFireServer
 			_simStatus = new StringBuilder();
 
 			InitializeComponent();
-            Hide();
+            //Hide();
+			
 
 			_processor = new MFireProcessor();
 			_processor.LogMessage += OnLogMessage;
@@ -227,11 +228,11 @@ namespace MFireServer
 
         protected override void OnStateChanged(EventArgs e)
         {
-            if (WindowState == System.Windows.WindowState.Minimized)
-            {
-                WindowState = WindowState.Normal;
-                Hide();
-            }
+            //if (WindowState == System.Windows.WindowState.Minimized)
+            //{
+            //    WindowState = WindowState.Normal;
+            //    Hide();
+            //}
             base.OnStateChanged(e);
         }
 

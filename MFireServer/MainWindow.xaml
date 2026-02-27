@@ -7,6 +7,7 @@
         xmlns:local="clr-namespace:MFireServer"
         mc:Ignorable="d"
 		ShowActivated="False"
+        WindowState="Minimized"
 		Closing="OnClosing"
         ShowInTaskbar="True"
         Title="MFireServer" Height="750" Width="900">
@@ -38,7 +39,7 @@
 				</ScrollViewer>
 			</TabItem>
 		</TabControl>
-        <tb:TaskbarIcon x:Name="myNotifyIcon"
+        <!--<tb:TaskbarIcon x:Name="myNotifyIcon"
                     Visibility="Visible"
                     ToolTipText="MFire Server"
                     MenuActivation="LeftOrRightClick"
@@ -51,6 +52,6 @@
                     <MenuItem Header="Exit" Click="MenuItem_Click_1" />
                 </ContextMenu>
             </tb:TaskbarIcon.ContextMenu>
-        </tb:TaskbarIcon>
+        </tb:TaskbarIcon>-->
     </DockPanel>
 </Window>
