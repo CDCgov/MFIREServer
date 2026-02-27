@@ -43,7 +43,6 @@
                     ToolTipText="MFire Server"
                     MenuActivation="LeftOrRightClick"
                     PopupActivation="DoubleClick"
-                    IconSource="server.ico"
                     TrayMouseDoubleClick="myNotifyIcon_TrayMouseDoubleClick"
                         >
             <tb:TaskbarIcon.ContextMenu>

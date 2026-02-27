@@ -246,7 +246,25 @@ namespace MFireServer
         private void addFireSourceEvent(MFireCmd arg1, MFireConnection arg2)
         {
             var cmd = (MFCAddFireSourceEvent)arg1;
-            _engine.AddFireSourceEvent(cmd.TimeStamp, cmd.AirwayNumber, cmd.ContamFlowRate, cmd.ContamConcentration, cmd.HeatInput, cmd.O2ConcLeavingFire, cmd.ContamPerCuFtO2, cmd.HeatPerCuFtO2, cmd.StandardAirFlow, cmd.TransitionTime); 
+            _engine.AddFireSourceEvent(
+                cmd.TimeStamp, 
+                cmd.AirwayNumber, 
+                cmd.ContamFlowRate, 
+                cmd.ContamConcentration, 
+                cmd.HeatInput, 
+                cmd.O2ConcLeavingFire, 
+                cmd.ContamPerCuFtO2, 
+                cmd.HeatPerCuFtO2, 
+                cmd.StandardAirFlow, 
+                cmd.TransitionTime,
+                //Aditional values used for t-squared fires:
+                0/*tlead*/,
+                0/*tmax*/,
+                0/*tstead*/,
+                0/*tdecay*/,
+                0/*qmax*/,
+                0/*fumeproconstant*/
+                ); 
         }
 
         private void addFanEvent(MFireCmd arg1, MFireConnection arg2)
