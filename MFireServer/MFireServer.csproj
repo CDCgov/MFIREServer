@@ -166,5 +166,15 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="error.png" />
+    <None Include="error.svg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="error_red.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="nearby_error_red.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

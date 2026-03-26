@@ -12,46 +12,105 @@
         ShowInTaskbar="True"
         Title="MFireServer" Height="750" Width="900">
 	<!--Visibility="Hidden"-->
-    <DockPanel>
 
-		<StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom">
-			<Button Click="OnClickedExit" Content="Exit" Margin="3" Padding="3" />
+    <Window.Resources>
+        <BitmapImage UriSource="/nearby_error_red.png" x:Key="ErrorImage"/>
+    </Window.Resources>
+    
+    <Window.TaskbarItemInfo>
+        <TaskbarItemInfo x:Name="taskBarItemInfo" Description="MFIRE Server" />
+        <!--" Overlay="{StaticResource ResourceKey=ErrorImage}"-->
+        
+    </Window.TaskbarItemInfo>
+
+    <Grid>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition Width="220" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+            <RowDefinition Height="150" />
+            <RowDefinition Height="30" />
+        </Grid.RowDefinitions>
+        
+        
+        <GroupBox DockPanel.Dock="Top" Grid.ColumnSpan="2" Header="Status" Margin="3">
+            <ListView Margin="6" x:Name="lstStatusItems">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding StatusText}" />
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+                <ListView.Items>
+                    <local:MFIREStatusItem x:Name="statusElapsed" StatusText="Elapsed Time: 00:00:00" />
+                    <local:MFIREStatusItem StatusText="Elapsed Time: 00:00:00" />
+                </ListView.Items>
+            </ListView>
+
+        </GroupBox>
+
+        <Grid  Margin="3" Grid.Column="1" Grid.Row="1">
+            <DockPanel >
+                <TextBlock Text="Clients" Height="23" DockPanel.Dock="Top"/>
+                <ListView x:Name="lstConnectedClients" ItemsSource="{Binding}">
+                
+                </ListView>
+            </DockPanel>
+        </Grid>
+
+        <TabControl Grid.Row="1" Margin="3">
+            <TabItem Header="Log">
+                <ScrollViewer>
+                    <TextBlock x:Name="txtLog" FontFamily="Courier New" />
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="MFire Output">
+
+                <ScrollViewer>
+                    <TextBlock x:Name="txtOutput" FontFamily="Courier New" />
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="Sim Status">
+
+                <ScrollViewer>
+                    <TextBlock x:Name="txtSimStatus" FontFamily="Courier New" />
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="Debug">
+
+                <ScrollViewer>
+                    <TextBlock x:Name="txtDebugLog" FontFamily="Courier New" />
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+
+        <GroupBox Header="Errors" Grid.Row="2" Grid.ColumnSpan="2" Margin="3">
+            <TextBlock x:Name="txtErrors"></TextBlock>
+        </GroupBox>
+
+        <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" Grid.Row="3" Grid.ColumnSpan="2" HorizontalAlignment="Right">
+			<Button Click="OnClickedExit" Content="Exit" Margin="3" Padding="3" Width="70" />
 		</StackPanel>
 
-		<TabControl>
-			<TabItem Header="Log">
-				<ScrollViewer>
-					<TextBlock x:Name="txtLog" />
-				</ScrollViewer>
-			</TabItem>
-
-			<TabItem Header="MFire Output">
-				
-				<ScrollViewer>
-					<TextBlock x:Name="txtOutput" />
-				</ScrollViewer>
-			</TabItem>
-
-			<TabItem Header="Sim Status">
-
-				<ScrollViewer>
-					<TextBlock x:Name="txtSimStatus" />
-				</ScrollViewer>
-			</TabItem>
-		</TabControl>
-        <!--<tb:TaskbarIcon x:Name="myNotifyIcon"
+		
+        <tb:TaskbarIcon x:Name="myNotifyIcon"
                     Visibility="Visible"
                     ToolTipText="MFire Server"
                     MenuActivation="LeftOrRightClick"
                     PopupActivation="DoubleClick"
-                    TrayMouseDoubleClick="myNotifyIcon_TrayMouseDoubleClick"
-                        >
+                    TrayMouseDoubleClick="OnTrayDoubleClick">
             <tb:TaskbarIcon.ContextMenu>
                 <ContextMenu>
-                    <MenuItem Header="Show window" Click="MenuItem_Click" />
-                    <MenuItem Header="Exit" Click="MenuItem_Click_1" />
+                    <MenuItem Header="Show window" Click="OnMenuShowWindow" />
+                    <MenuItem Header="Exit" Click="OnMenuExit" />
                 </ContextMenu>
             </tb:TaskbarIcon.ContextMenu>
-        </tb:TaskbarIcon>-->
-    </DockPanel>
+        </tb:TaskbarIcon>
+    </Grid>
 </Window>

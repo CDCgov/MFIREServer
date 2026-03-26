@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.IO;
+using System.Diagnostics;
 
 namespace MFireProtocol
 {
@@ -30,6 +31,15 @@ namespace MFireProtocol
         private ManualResetEvent _sendQueueHasData;
 
         private bool _hasDisconnected = false;
+
+        public string ConnectedAddress { get
+            {
+                if (_client == null || _client.Client == null)
+                    return "Unknown";
+
+                return _client.Client.RemoteEndPoint.ToString();
+            } 
+        }
 
         public TCPConnectionHandler()
         {
@@ -135,18 +145,21 @@ namespace MFireProtocol
 
                     if (waitResult == 1)
                     {
-                        //receive completed
-
+                        //receive completed                        
                         int bytesRecvd = s.EndReceive(asyncResult);
 
                         if (bytesRecvd > 0)
                             _bufferedBytes += (uint)bytesRecvd;
                         else
                         {
-                            Thread.Sleep(250);
+                            //Zero byte read indicates remote socket graceful shutdown
+                            break;
 
-                            if (!s.Connected)
-                                break;
+                            //Thread.Sleep(250);
+
+                            //if (!s.Connected)
+                            //    break;
+
                             //else
                             //    Thread.Sleep(250);//something strange happend
                         }
@@ -193,13 +206,25 @@ namespace MFireProtocol
                         break;
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    if (!s.Connected)
+                    {
+                        //socket has disconnected
+                        break;
+                    }
+
+                    Debug.WriteLine($"TCPConnectionHandler Receive Error: {ex.Message}");
                     Thread.Sleep(250);
                 }
             }
 
             _hasDisconnected = true;
+
+            if (_client.Connected)
+                _client.Close();
+
+            _client.Dispose();
 
             RaiseClientDisconnected();
 

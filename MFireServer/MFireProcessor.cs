@@ -7,15 +7,31 @@ using System.Threading.Tasks;
 using MFireProtocol;
 using MFireDLL;
 using System.IO;
+using System.Collections.ObjectModel;
 
 namespace MFireServer
 {
+	struct MFireServerClient
+	{
+		public MFireConnection Conn;
+		public string Address;
+
+        public override string ToString()
+        {
+			return Address;
+        }
+	}
+
 	class MFireProcessor : IDisposable
 	{
 
 		public event Action<string> LogMessage;
+		public event Action<string, LogSeverityLevel> LogMessageWithLevel;
 		public event Action<string> OutputMessage;
-		public event Action SimulationUpdated;
+		public event Action<double> SimulationUpdated;
+		public event Action SimulationReset;
+
+		public ObservableCollection<MFireServerClient> ConnectedClients;
 
 		private MFireTCPServer _tcpServer;
 		private MFireEngine _engine;
@@ -36,6 +52,11 @@ namespace MFireServer
 
 		private MFCConfigureMFire _lastConfigCommand = null;
 
+		public MFireProcessor()
+		{
+			ConnectedClients = new ObservableCollection<MFireServerClient>();
+		}
+
 		public void Startup()
 		{
 			if (_tcpServer != null)
@@ -48,6 +69,7 @@ namespace MFireServer
 
 			_tcpServer = new MFireTCPServer();
 			_tcpServer.ClientConnected += OnClientConnected;
+			_tcpServer.ClientDisconnected += OnClientDisconnected;
 
 			int port = 3444;
 			_tcpServer.StartServer(port);			
@@ -64,9 +86,42 @@ namespace MFireServer
 		{
 			MFireConnection conn = (MFireConnection)obj;
 			conn.MFireCmdReceived += OnMFireCmdReceived;
+
+			Application.Current.Dispatcher.BeginInvoke(new Action<MFireConnection>(OnClientConnectedMainThread), conn);
+			
 		}
 
-		private void OnMFireCmdReceived(MFireConnection obj)
+		private void OnClientConnectedMainThread(MFireConnection conn)
+		{
+            var client = new MFireServerClient
+            {
+                Conn = conn,
+                Address = conn.ConnectedAddress,
+            };
+
+            ConnectedClients.Add(client);
+        }
+
+        private void OnClientDisconnected(TCPConnectionHandler obj)
+        {
+            MFireConnection conn = (MFireConnection)obj;
+            Application.Current.Dispatcher.BeginInvoke(new Action<MFireConnection>(OnClientDisconnectedMainThread), conn);
+        }
+
+		private void OnClientDisconnectedMainThread(MFireConnection conn)
+		{
+
+            for (int i = 0; i < ConnectedClients.Count; i++)
+            {
+                if (ConnectedClients[i].Conn == conn)
+                {
+                    ConnectedClients.RemoveAt(i);
+                    break;
+                }
+            }
+        }
+
+        private void OnMFireCmdReceived(MFireConnection obj)
 		{
 			ProcessMFireCmds(obj);
 		}
@@ -225,6 +280,8 @@ namespace MFireServer
 		{
 			ClearMFireSimulation();
 			InitializeMFire();
+
+			SimulationReset?.Invoke();
 		}
 
 		private void InitializeMFire()
@@ -349,6 +406,8 @@ namespace MFireServer
 		private void OnLogReceived(LogSeverityLevel severity, string message)
 		{
 			RaiseLogMessage("LogMessage: " + message);
+
+			LogMessageWithLevel?.Invoke(message, severity);
 		}
 
 		private void OnOutputReceived(string message)
@@ -410,7 +469,8 @@ namespace MFireServer
 					double elapsedTime = _engine.GetTime() * 60.0 * 1000.0;
 
 					conn.SendSimulationUpdated(elapsedTime);
-					RaiseSimulationUpdated();
+					//RaiseSimulationUpdated();
+					SimulationUpdated?.Invoke(elapsedTime);
 				}
 			}
 			catch (Exception)
@@ -449,12 +509,12 @@ namespace MFireServer
 				handler(msg);
 		}
 
-		private void RaiseSimulationUpdated()
-		{
-			var handler = SimulationUpdated;
-			if (handler != null)
-				handler();
-		}
+		//private void RaiseSimulationUpdated()
+		//{
+		//	var handler = SimulationUpdated;
+		//	if (handler != null)
+		//		handler();
+		//}
 
 		#region IDisposable Support
 		private bool disposedValue = false; // To detect redundant calls

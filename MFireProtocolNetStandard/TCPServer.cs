@@ -11,6 +11,7 @@ namespace MFireProtocol
 	public abstract class TCPServer : IDisposable
 	{
 		public event Action<TCPConnectionHandler> ClientConnected;
+		public event Action<TCPConnectionHandler> ClientDisconnected;
 
 		public TCPConnectionHandler LastConnectedClient;
 
@@ -102,13 +103,15 @@ namespace MFireProtocol
 		}
 
 		private void OnClientDisconnected(TCPConnectionHandler handler)
-		{
+		{			
 			handler.ClientDisconnected -= OnClientDisconnected;
-			/*lock (_connectionsListLock)
+			lock (_connectionsListLock)
 			{
 				_connections.Remove(handler);
-			} */
-		}
+			}
+
+            ClientDisconnected?.Invoke(handler);
+        }
 
 		public int GetNumConnections()          
 		{

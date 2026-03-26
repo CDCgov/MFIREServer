@@ -14,9 +14,23 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using MFireProtocol;
 using MFireDLL;
+using System.ComponentModel;
 
 namespace MFireServer
 {
+	public class MFIREStatusItem : INotifyPropertyChanged
+	{
+		public string StatusText { get; set; }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+		private PropertyChangedEventArgs _eventArgs = new PropertyChangedEventArgs(null);
+		public void Update()
+		{
+			PropertyChanged?.Invoke(this, _eventArgs);
+		}
+    }
+
 	/// <summary>
 	/// Interaction logic for MainWindow.xaml
 	/// </summary>
@@ -24,8 +38,15 @@ namespace MFireServer
 	{
 		public const int MAX_LOG_DISPLAY = 100;
 		LinkedList<string> _logEntries;
+		LinkedList<string> _debugEntries;
+		LinkedList<string> _errorEntries;
+
 		LinkedList<string> _outputEntries;
+		//LinkedList<string> _reportEntries;
 		StringBuilder _txtLogSB;
+		StringBuilder _txtDebugSB;
+		StringBuilder _txtErrorSB;
+
 		StringBuilder _txtOutputSB;
 		StringBuilder _simStatus;
 
@@ -36,8 +57,13 @@ namespace MFireServer
 		public MainWindow()
 		{
 			_logEntries = new LinkedList<string>();
+			_debugEntries = new LinkedList<string>();
+			_errorEntries = new LinkedList<string>();
 			_outputEntries = new LinkedList<string>();
+			//_reportEntries = new LinkedList<string>();
 			_txtLogSB = new StringBuilder();
+			_txtDebugSB = new StringBuilder();
+			_txtErrorSB = new StringBuilder();
 			_txtOutputSB = new StringBuilder();
 			_simStatus = new StringBuilder();
 
@@ -46,16 +72,19 @@ namespace MFireServer
 			
 
 			_processor = new MFireProcessor();
-			_processor.LogMessage += OnLogMessage;
+			_processor.LogMessageWithLevel += OnLogMessage;
 			_processor.OutputMessage += OnOutputMessage;
 			_processor.SimulationUpdated += OnSimulationUpdated;
+			_processor.SimulationReset += OnSimulationReset;
 			_processor.Startup();
+
+			lstConnectedClients.DataContext = _processor.ConnectedClients;
 
 		}
 
 		private Action _updateSimStatusDel;
 
-		private void OnSimulationUpdated()
+		private void OnSimulationUpdated(double elapsedMs)
 		{
 			lock (_simStatus)
 			{
@@ -93,12 +122,62 @@ namespace MFireServer
 							j.Number, j.ContamConcentration, j.TotalContaminant, j.CH4Concentration);
 					}
 				}
+
+				TimeSpan ts = new TimeSpan(0, 0, (int)Math.Round((elapsedMs / 1000.0)));
+				statusElapsed.StatusText = string.Format("Sim Time: {0}", ts.ToString());
+				statusElapsed.Update();
 			}
+			
+
+			UpdateErrorDisplay();
 
 			if (_updateSimStatusDel == null)
 				_updateSimStatusDel = UpdateSimStatusText;
 
 			App.Current.Dispatcher.BeginInvoke(_updateSimStatusDel);
+		}
+
+		private void UpdateErrorDisplay()
+		{
+            if (_errorEntries.Count > 0)
+            {
+                taskBarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.Error;
+				taskBarItemInfo.Overlay = this.Resources["ErrorImage"] as ImageSource;
+            }
+            else
+            {
+                taskBarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.None;
+				TaskbarItemInfo.Overlay = null;
+            }
+        }
+
+		private void OnSimulationReset()
+		{
+            if (App.Current == null || App.Current.Dispatcher == null)
+                return;
+
+			//invoke on main thread
+			if (App.Current.Dispatcher.Thread != System.Threading.Thread.CurrentThread)
+			{
+				App.Current.Dispatcher.BeginInvoke((Action)OnSimulationReset);
+				return;
+			}
+
+			ClearErrors();
+		}
+
+		private void ClearErrors()
+		{
+			if (txtErrors != null)
+				txtErrors.Text = "";
+
+			if (_errorEntries != null)
+				_errorEntries.Clear();
+
+			if (_txtErrorSB != null)
+				_txtErrorSB.Clear();
+
+			UpdateErrorDisplay();
 		}
 
 		private void UpdateSimStatusText()
@@ -111,9 +190,9 @@ namespace MFireServer
 			txtSimStatus.Text = status;
 		}
 
-		private void OnLogMessage(string msg)
+		private void OnLogMessage(string msg, LogSeverityLevel severity)
 		{
-			AppendLog(msg);
+			AppendLog(msg, severity);
 		}
 
 		private void OnOutputMessage(string msg)
@@ -121,12 +200,12 @@ namespace MFireServer
 			AppendOutputLog(msg);
 		}
 
-		public void AppendLog(string fmt, params object[] args)
-		{
-			string line = string.Format(fmt, args);
+		//public void AppendLog(string fmt, params object[] args)
+		//{
+		//	string line = string.Format(fmt, args);
 
-			AppendLog(line);
-		}
+		//	AppendLog(line);
+		//}
 
 		public void AppendOutputLog(string fmt, params object[] args)
 		{
@@ -140,9 +219,9 @@ namespace MFireServer
 			AppendText(message, _outputEntries, _txtOutputSB, txtOutput);
 		}
 
-		private Action<string> _appendLogDel;
+		private Action<string, LogSeverityLevel> _appendLogDel;
 
-		public void AppendLog(string line)
+		public void AppendLog(string msg, LogSeverityLevel severity)
 		{
 			if (App.Current == null || App.Current.Dispatcher == null)
 				return;
@@ -153,22 +232,58 @@ namespace MFireServer
 				if (_appendLogDel == null)
 					_appendLogDel = AppendLog;
 
-				App.Current.Dispatcher.BeginInvoke(_appendLogDel, line);
+				App.Current.Dispatcher.BeginInvoke(_appendLogDel, msg, severity);
 				return;
 			}
 
-			_logEntries.AddFirst(line);
-			while (_logEntries.Count > MAX_LOG_DISPLAY)
-				_logEntries.RemoveLast();
+			var log = String.Format("{0,12}: {1}", severity.ToString(), msg);
 
-			_txtLogSB.Clear();
-			foreach (string log in _logEntries)
+			if (severity != LogSeverityLevel.DEBUG)
 			{
-				_txtLogSB.AppendLine(log);
+				AppendLog(log, _logEntries, _txtLogSB, txtLog);
+			}
+			else
+			{
+                AppendLog(log, _debugEntries, _txtDebugSB, txtDebugLog);
+            }
+
+			if (severity == LogSeverityLevel.ERROR)
+			{
+				AppendLog(log, _errorEntries, _txtErrorSB, txtErrors);
+
+				UpdateErrorDisplay();
 			}
 
-			txtLog.Text = _txtLogSB.ToString();
+			//_logEntries.AddFirst(line);
+			//while (_logEntries.Count > MAX_LOG_DISPLAY)
+			//	_logEntries.RemoveLast();
+
+			//_txtLogSB.Clear();
+			//foreach (string log in _logEntries)
+			//{
+			//	_txtLogSB.AppendLine(log);
+			//}
+
+			//txtLog.Text = _txtLogSB.ToString();
 		}
+
+		private void AppendLog(string line, LinkedList<string> list, StringBuilder sb, TextBlock txtBlock)
+		{
+			if (list == null || sb == null || txtBlock == null)
+				return;
+
+            list.AddFirst(line);
+            while (list.Count > MAX_LOG_DISPLAY)
+                list.RemoveLast();
+
+            sb.Clear();
+            foreach (string log in list)
+            {
+                sb.AppendLine(log);
+            }
+
+            txtBlock.Text = sb.ToString();
+        }
 
 		private delegate void AppendTextDel(string line, LinkedList<string> entries, StringBuilder sb, TextBlock txt);
 		private AppendTextDel _appendTextDel;
@@ -236,12 +351,12 @@ namespace MFireServer
             base.OnStateChanged(e);
         }
 
-        private void myNotifyIcon_TrayMouseDoubleClick(object sender, RoutedEventArgs e)
+        private void OnTrayDoubleClick(object sender, RoutedEventArgs e)
         {
             ShowWindow();
         }
 
-        private void MenuItem_Click(object sender, RoutedEventArgs e)
+        private void OnMenuShowWindow(object sender, RoutedEventArgs e)
         {
             ShowWindow();
         }
@@ -252,7 +367,7 @@ namespace MFireServer
             Show();
         }
 
-        private void MenuItem_Click_1(object sender, RoutedEventArgs e)
+        private void OnMenuExit(object sender, RoutedEventArgs e)
         {
             Close();
         }
