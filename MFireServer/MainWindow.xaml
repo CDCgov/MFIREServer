@@ -10,11 +10,16 @@
         WindowState="Minimized"
 		Closing="OnClosing"
         ShowInTaskbar="True"
-        Title="MFireServer" Height="750" Width="900">
+        Title="MFIRE Server" Height="750" Width="900">
 	<!--Visibility="Hidden"-->
 
     <Window.Resources>
-        <BitmapImage UriSource="/nearby_error_red.png" x:Key="ErrorImage"/>
+        <BitmapImage x:Key="ErrorImage" UriSource="/GoogleMaterialDesignIcons/nearby_error_red.png" />
+        <BitmapImage x:Key="FireDeptImage" UriSource="/GoogleMaterialDesignIcons/local_fire_department_24dp_000000.png" />
+        <BitmapImage x:Key="NumberImage" UriSource="/GoogleMaterialDesignIcons/numbers_24dp_000000.png" />
+        <BitmapImage x:Key="FanImage" UriSource="/GoogleMaterialDesignIcons/mode_fan_24dp_000000.png" />
+        <BitmapImage x:Key="TimeImage" UriSource="/GoogleMaterialDesignIcons/timer_24dp_000000.png" />
+        <BitmapImage x:Key="SpeedImage" UriSource="/GoogleMaterialDesignIcons/speed_24dp_000000.png" />
     </Window.Resources>
     
     <Window.TaskbarItemInfo>
@@ -38,15 +43,30 @@
         
         
         <GroupBox DockPanel.Dock="Top" Grid.ColumnSpan="2" Header="Status" Margin="3">
-            <ListView Margin="6" x:Name="lstStatusItems">
+            <ListView Margin="3" x:Name="lstStatusItems" BorderThickness="0" BorderBrush="Transparent">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Text="{Binding StatusText}" />
+                        <BulletDecorator>
+                            <BulletDecorator.Bullet>
+                                <Image Source="{Binding Image}" Width="16"/>
+                            </BulletDecorator.Bullet>
+                            <TextBlock Padding="6 0 0 0" Text="{Binding StatusText}" />
+                        </BulletDecorator>
                     </DataTemplate>
                 </ListView.ItemTemplate>
+                <ListView.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="2" ></UniformGrid>
+                    </ItemsPanelTemplate>
+                </ListView.ItemsPanel>
                 <ListView.Items>
-                    <local:MFIREStatusItem x:Name="statusElapsed" StatusText="Elapsed Time: 00:00:00" />
-                    <local:MFIREStatusItem StatusText="Elapsed Time: 00:00:00" />
+                    <local:MFIREStatusItem x:Name="statusSimTime" StatusText="Sim Time:" Image="{StaticResource TimeImage}" />
+                    <local:MFIREStatusItem x:Name="statusComputeTime" StatusText="Compute Time (ms):" Image="{StaticResource SpeedImage}" />
+                    <local:MFIREStatusItem x:Name="statusNumJunctions" StatusText="Num Junctions:" Image="{StaticResource NumberImage}"/>
+                    <local:MFIREStatusItem x:Name="statusNumAirways" StatusText="Num Airways:" Image="{StaticResource NumberImage}"/>
+                    <local:MFIREStatusItem x:Name="statusNumFires" StatusText="Num Fires:" Image="{StaticResource FireDeptImage}" />
+                    <local:MFIREStatusItem x:Name="statusNumFans" StatusText="Num Fans:" Image="{StaticResource FanImage}"/>
+                    
                 </ListView.Items>
             </ListView>
 

@@ -166,15 +166,18 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
-    <Resource Include="error.png" />
-    <None Include="error.svg" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="error_red.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="nearby_error_red.png" />
+    <Resource Include="GoogleMaterialDesignIcons\error.png" />
+    <Content Include="GoogleMaterialDesignIcons\error.svg" />
+    <Resource Include="GoogleMaterialDesignIcons\error_red.png" />
+    <Resource Include="GoogleMaterialDesignIcons\LICENSE-2.0.txt" />
+    <Resource Include="GoogleMaterialDesignIcons\local_fire_department_24dp_000000.png" />
+    <Resource Include="GoogleMaterialDesignIcons\mode_fan_24dp_000000.png" />
+    <Resource Include="GoogleMaterialDesignIcons\nearby_error_red.png" />
+    <Resource Include="GoogleMaterialDesignIcons\numbers_24dp_000000.png" />
+    <Resource Include="GoogleMaterialDesignIcons\speed_24dp_000000.png" />
+    <Resource Include="GoogleMaterialDesignIcons\timer_24dp_000000.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

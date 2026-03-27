@@ -33,6 +33,9 @@ namespace MFireServer
 
 		public ObservableCollection<MFireServerClient> ConnectedClients;
 
+		//last compute time in ms
+		public long LastComputeTime;
+
 		private MFireTCPServer _tcpServer;
 		private MFireEngine _engine;
 
@@ -51,6 +54,8 @@ namespace MFireServer
 		private bool _configBuilt = false;
 
 		private MFCConfigureMFire _lastConfigCommand = null;
+
+		private System.Diagnostics.Stopwatch _timer = new System.Diagnostics.Stopwatch();
 
 		public MFireProcessor()
 		{
@@ -273,7 +278,11 @@ namespace MFireServer
 				}
 			}
 
+			_timer.Reset();
+			_timer.Start();
 			_engine.SyncRunSimulation(10000);
+			_timer.Stop();
+			LastComputeTime = _timer.ElapsedMilliseconds;
 		}
 
 		public void ResetSimulation()

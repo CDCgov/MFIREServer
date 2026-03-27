@@ -15,12 +15,14 @@ using System.Windows.Shapes;
 using MFireProtocol;
 using MFireDLL;
 using System.ComponentModel;
+using System.Diagnostics;
 
 namespace MFireServer
 {
 	public class MFIREStatusItem : INotifyPropertyChanged
 	{
 		public string StatusText { get; set; }
+		public ImageSource Image { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -92,13 +94,20 @@ namespace MFireServer
 
 				var config = _processor.GetCurrentConfig();
 
+				int numAirways = 0;
+				int numJunctions = 0;
+				int numFans = 0;
+				int numFires = 0;
+
 				_simStatus.AppendFormat("Start Junction: {0}\n", config.StartJunction);
+
 				
 				if (config.Fans != null)
 				{
 					foreach (var fan in config.Fans)
 					{
 						_simStatus.AppendFormat("Fan in Airway {0}\n", fan.AirwayNo);
+						numFans++;
 					}
 				}
 
@@ -108,14 +117,21 @@ namespace MFireServer
 					foreach (var fire in config.Fires)
 					{
 						_simStatus.AppendFormat("Fire in Airway {0}\n", fire.AirwayNo);
+						numFires++;
 					}
 				}
+
 				if (config.Airways != null)
+				{
 					_simStatus.AppendFormat("Num Airways : {0}\n", config.Airways.Count);
+					numAirways = config.Airways.Count;
+				}
+
 				if (config.Junctions != null)
 				{
 					_simStatus.AppendFormat("Num Junctions : {0}\n", config.Junctions.Count);
-
+					numJunctions = config.Junctions.Count;
+					
 					foreach (Junction j in config.Junctions)
 					{
 						_simStatus.AppendFormat("J{0}\tContamConc: {1:F5}\tTotalContam: {2:F5}\tCH4Conc: {3:F5}\n",
@@ -124,12 +140,25 @@ namespace MFireServer
 				}
 
 				TimeSpan ts = new TimeSpan(0, 0, (int)Math.Round((elapsedMs / 1000.0)));
-				statusElapsed.StatusText = string.Format("Sim Time: {0}", ts.ToString());
-				statusElapsed.Update();
-			}
-			
+				statusSimTime.StatusText = string.Format("Sim Time: {0}", ts.ToString());
+                statusSimTime.Update();
 
-			UpdateErrorDisplay();
+				statusNumAirways.StatusText = string.Format("Num Airways: {0}", numAirways);
+				statusNumAirways.Update();
+
+				statusNumJunctions.StatusText = string.Format("Num Junctions: {0}", numJunctions);
+				statusNumJunctions.Update();
+
+				statusNumFires.StatusText = string.Format("Num Fires: {0}", numFires);
+				statusNumFires.Update();
+
+				statusNumFans.StatusText = string.Format("Num Fans: {0}", numFans);
+				statusNumFans.Update();
+
+				statusComputeTime.StatusText = string.Format("Compute Time: {0}ms", _processor.LastComputeTime);
+				statusComputeTime.Update();
+			}
+						
 
 			if (_updateSimStatusDel == null)
 				_updateSimStatusDel = UpdateSimStatusText;
@@ -139,16 +168,23 @@ namespace MFireServer
 
 		private void UpdateErrorDisplay()
 		{
-            if (_errorEntries.Count > 0)
-            {
-                taskBarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.Error;
-				taskBarItemInfo.Overlay = this.Resources["ErrorImage"] as ImageSource;
-            }
-            else
-            {
-                taskBarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.None;
-				TaskbarItemInfo.Overlay = null;
-            }
+			try
+			{
+				if (_errorEntries.Count > 0)
+				{
+					taskBarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.Error;
+					taskBarItemInfo.Overlay = this.Resources["ErrorImage"] as ImageSource;
+				}
+				else
+				{
+					taskBarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.None;
+					TaskbarItemInfo.Overlay = null;
+				}
+			}
+			catch (Exception ex)
+			{
+				AppendLog($"Error updating error display: {ex.Message}", LogSeverityLevel.ERROR);
+			}
         }
 
 		private void OnSimulationReset()
@@ -188,7 +224,9 @@ namespace MFireServer
 				status = _simStatus.ToString();
 			}
 			txtSimStatus.Text = status;
-		}
+
+            UpdateErrorDisplay();
+        }
 
 		private void OnLogMessage(string msg, LogSeverityLevel severity)
 		{
@@ -236,7 +274,7 @@ namespace MFireServer
 				return;
 			}
 
-			var log = String.Format("{0,12}: {1}", severity.ToString(), msg);
+			var log = String.Format("{0,-8}: {1}", severity.ToString(), msg);
 
 			if (severity != LogSeverityLevel.DEBUG)
 			{
