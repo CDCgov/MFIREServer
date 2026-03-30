@@ -82,6 +82,7 @@ namespace MFireServer
 
 			lstConnectedClients.DataContext = _processor.ConnectedClients;
 
+
 		}
 
 		private Action _updateSimStatusDel;
@@ -174,11 +175,15 @@ namespace MFireServer
 				{
 					taskBarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.Error;
 					taskBarItemInfo.Overlay = this.Resources["ErrorImage"] as ImageSource;
-				}
+
+                    WindowFlasher.Flash(this, 0);
+                }
 				else
 				{
 					taskBarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.None;
 					TaskbarItemInfo.Overlay = null;
+
+					WindowFlasher.StopFlashing(this);
 				}
 			}
 			catch (Exception ex)
