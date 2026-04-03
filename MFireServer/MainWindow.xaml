@@ -7,11 +7,11 @@
         xmlns:local="clr-namespace:MFireServer"
         mc:Ignorable="d"
 		ShowActivated="False"
-        WindowState="Minimized"
+        WindowState="Normal"
 		Closing="OnClosing"
         ShowInTaskbar="True"
-        Title="MFIRE Server" Height="750" Width="900">
-	<!--Visibility="Hidden"-->
+        Title="MFIRE Server" Height="900" Width="1200" MinHeight="900">
+    <!--Visibility="Hidden"-->
 
     <Window.Resources>
         <BitmapImage x:Key="ErrorImage" UriSource="/GoogleMaterialDesignIcons/nearby_error_red.png" />
@@ -21,104 +21,165 @@
         <BitmapImage x:Key="TimeImage" UriSource="/GoogleMaterialDesignIcons/timer_24dp_000000.png" />
         <BitmapImage x:Key="SpeedImage" UriSource="/GoogleMaterialDesignIcons/speed_24dp_000000.png" />
     </Window.Resources>
-    
+
     <Window.TaskbarItemInfo>
         <TaskbarItemInfo x:Name="taskBarItemInfo" Description="MFIRE Server" />
         <!--" Overlay="{StaticResource ResourceKey=ErrorImage}"-->
-        
+
     </Window.TaskbarItemInfo>
 
     <Grid>
 
         <Grid.ColumnDefinitions>
             <ColumnDefinition />
-            <ColumnDefinition Width="220" />
+            <ColumnDefinition />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
+            <RowDefinition Height="0" />
             <RowDefinition Height="Auto" />
-            <RowDefinition />
-            <RowDefinition Height="150" />
+            <RowDefinition Height="*" MinHeight="100" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="30" />
         </Grid.RowDefinitions>
-        
-        
-        <GroupBox DockPanel.Dock="Top" Grid.ColumnSpan="2" Header="Status" Margin="3">
-            <ListView Margin="3" x:Name="lstStatusItems" BorderThickness="0" BorderBrush="Transparent">
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <BulletDecorator>
-                            <BulletDecorator.Bullet>
-                                <Image Source="{Binding Image}" Width="16"/>
-                            </BulletDecorator.Bullet>
-                            <TextBlock Padding="6 0 0 0" Text="{Binding StatusText}" />
-                        </BulletDecorator>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-                <ListView.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <UniformGrid Columns="2" ></UniformGrid>
-                    </ItemsPanelTemplate>
-                </ListView.ItemsPanel>
-                <ListView.Items>
-                    <local:MFIREStatusItem x:Name="statusSimTime" StatusText="Sim Time:" Image="{StaticResource TimeImage}" />
-                    <local:MFIREStatusItem x:Name="statusComputeTime" StatusText="Compute Time (ms):" Image="{StaticResource SpeedImage}" />
-                    <local:MFIREStatusItem x:Name="statusNumJunctions" StatusText="Num Junctions:" Image="{StaticResource NumberImage}"/>
-                    <local:MFIREStatusItem x:Name="statusNumAirways" StatusText="Num Airways:" Image="{StaticResource NumberImage}"/>
-                    <local:MFIREStatusItem x:Name="statusNumFires" StatusText="Num Fires:" Image="{StaticResource FireDeptImage}" />
-                    <local:MFIREStatusItem x:Name="statusNumFans" StatusText="Num Fans:" Image="{StaticResource FanImage}"/>
-                    
-                </ListView.Items>
-            </ListView>
 
-        </GroupBox>
+        <!--<DockPanel Grid.ColumnSpan="2">
+            <TextBlock Text="{Binding SimulationTime, StringFormat={}{0:hh\\:mm\\:ss}}" 
+                       x:Name="txtSimTime"
+                       FontFamily="Courier New"
+                       FontSize="35"
+                       FontWeight="Bold"
+                       MinWidth="20"
+                       TextAlignment="Center"
+                       Margin="0"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </DockPanel>-->
 
-        <Grid  Margin="3" Grid.Column="1" Grid.Row="1">
-            <DockPanel >
-                <TextBlock Text="Clients" Height="23" DockPanel.Dock="Top"/>
-                <ListView x:Name="lstConnectedClients" ItemsSource="{Binding}">
-                
+        <GroupBox Grid.Row="1" Grid.ColumnSpan="2" Header="Status" Margin="3 0 3 3">
+            <DockPanel>
+                <TextBlock Text="{Binding SimulationTime, StringFormat={}Sim Time: {0:hh\\:mm\\:ss}}"
+                           DockPanel.Dock="Top"
+                           x:Name="txtSimTime"
+                           FontFamily="Courier New"
+                           FontSize="35"
+                           FontWeight="Bold"
+                           MinWidth="20"                           
+                           TextAlignment="Center"
+                           Margin="0"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <ListView Margin="3" x:Name="lstStatusItems" BorderThickness="0" BorderBrush="Transparent">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <BulletDecorator>
+                                <BulletDecorator.Bullet>
+                                    <Image Source="{Binding Image}" Width="16"/>
+                                </BulletDecorator.Bullet>
+                                <TextBlock Padding="6 0 0 0" Text="{Binding StatusText}" />
+                            </BulletDecorator>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                    <ListView.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Columns="2" ></UniformGrid>
+                        </ItemsPanelTemplate>
+                    </ListView.ItemsPanel>
+                    <ListView.Items>
+                        <!--<local:MFIREStatusItem x:Name="statusSimTime" StatusText="Sim Time:" Image="{StaticResource TimeImage}" />-->
+                        <local:MFIREStatusItem x:Name="statusComputeTime" StatusText="Compute Time (ms):" Image="{StaticResource SpeedImage}" />
+                        <local:MFIREStatusItem x:Name="statusLastUpdate" StatusText="Last Update" Image="{StaticResource TimeImage}" />
+                        <local:MFIREStatusItem x:Name="statusNumJunctions" StatusText="Num Junctions:" Image="{StaticResource NumberImage}"/>
+                        <local:MFIREStatusItem x:Name="statusNumAirways" StatusText="Num Airways:" Image="{StaticResource NumberImage}"/>
+                        <local:MFIREStatusItem x:Name="statusNumFires" StatusText="Num Fires:" Image="{StaticResource FireDeptImage}" />
+                        <local:MFIREStatusItem x:Name="statusNumFans" StatusText="Num Fans:" Image="{StaticResource FanImage}"/>
+
+                    </ListView.Items>
                 </ListView>
             </DockPanel>
-        </Grid>
+        </GroupBox>
 
-        <TabControl Grid.Row="1" Margin="3">
-            <TabItem Header="Log">
-                <ScrollViewer>
-                    <TextBlock x:Name="txtLog" FontFamily="Courier New" />
-                </ScrollViewer>
-            </TabItem>
 
-            <TabItem Header="MFire Output">
+        <GroupBox Header="Warnings" Grid.Row="2" Grid.Column="0" Margin="3">
+            <TextBlock x:Name="txtWarnings"></TextBlock>
+        </GroupBox>
 
-                <ScrollViewer>
-                    <TextBlock x:Name="txtOutput" FontFamily="Courier New" />
-                </ScrollViewer>
-            </TabItem>
-
-            <TabItem Header="Sim Status">
-
-                <ScrollViewer>
-                    <TextBlock x:Name="txtSimStatus" FontFamily="Courier New" />
-                </ScrollViewer>
-            </TabItem>
-
-            <TabItem Header="Debug">
-
-                <ScrollViewer>
-                    <TextBlock x:Name="txtDebugLog" FontFamily="Courier New" />
-                </ScrollViewer>
-            </TabItem>
-        </TabControl>
-
-        <GroupBox Header="Errors" Grid.Row="2" Grid.ColumnSpan="2" Margin="3">
+        <GroupBox Header="Errors" Grid.Row="2" Grid.Column="1" Margin="3">
             <TextBlock x:Name="txtErrors"></TextBlock>
         </GroupBox>
 
-        <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" Grid.Row="3" Grid.ColumnSpan="2" HorizontalAlignment="Right">
-			<Button Click="OnClickedExit" Content="Exit" Margin="3" Padding="3" Width="70" />
-		</StackPanel>
+        <Expander Header="More Information" Grid.Row="3" Grid.ColumnSpan="2" Margin="3" IsExpanded="False">
+            <Grid Height="550">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="220" />
+                </Grid.ColumnDefinitions>
 
-		
+                <TabControl Grid.Row="1" Margin="3">
+                    <TabItem Header="Log">
+                        <ScrollViewer>
+                            <TextBlock x:Name="txtLog" FontFamily="Courier New" />
+                        </ScrollViewer>
+                    </TabItem>
+
+                    <TabItem Header="MFire Output">
+
+                        <ScrollViewer>
+                            <TextBlock x:Name="txtOutput" FontFamily="Courier New" />
+                        </ScrollViewer>
+                    </TabItem>
+
+                    <TabItem Header="Sim Status">
+
+                        <ScrollViewer>
+                            <TextBlock x:Name="txtSimStatus" FontFamily="Courier New" />
+                        </ScrollViewer>
+                    </TabItem>
+
+                    <TabItem Header="Report">
+
+                        <ScrollViewer>
+                            <TextBlock x:Name="txtDataReport" FontFamily="Courier New" />
+                        </ScrollViewer>
+                    </TabItem>
+
+                    <TabItem Header="Debug">
+
+                        <ScrollViewer>
+                            <TextBlock x:Name="txtDebugLog" FontFamily="Courier New" />
+                        </ScrollViewer>
+                    </TabItem>
+
+
+                </TabControl>
+                <Grid  Margin="3" Grid.Column="1" Grid.Row="1">
+                    <DockPanel >
+                        <TextBlock Text="Clients" Height="23" DockPanel.Dock="Top"/>
+                        <ListView x:Name="lstConnectedClients" ItemsSource="{Binding}">
+
+                        </ListView>
+                    </DockPanel>
+                </Grid>
+            </Grid>
+        </Expander>
+
+        <Grid DockPanel.Dock="Bottom" Grid.Row="4" Grid.ColumnSpan="2" HorizontalAlignment="Stretch">
+            <StackPanel Orientation="Horizontal">
+                <Label Target="{Binding ElementName=txtSimTimestep}">Simulation Time Step (seconds):</Label>
+                <TextBox x:Name="txtSimTimestep" 
+                         HorizontalAlignment="Left" Width="100" Margin="3" VerticalAlignment="Center">
+                    <TextBox.Text>
+                        <Binding Path="SimTimestep" 
+                                 Converter="{local:SimTimestepConverter}"
+                                 UpdateSourceTrigger="PropertyChanged">
+                            <Binding.ValidationRules>
+                                <local:SimTimestepValidator/>
+                            </Binding.ValidationRules>
+                        </Binding>
+                    </TextBox.Text>
+                </TextBox>
+            </StackPanel>
+            <Button Click="OnClickedExit" Content="Exit" Margin="3" Padding="3" Width="70" HorizontalAlignment="Right" />
+        </Grid>
+
+
         <tb:TaskbarIcon x:Name="myNotifyIcon"
                     Visibility="Visible"
                     ToolTipText="MFire Server"

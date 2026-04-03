@@ -8,6 +8,8 @@ using MFireProtocol;
 using MFireDLL;
 using System.IO;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Diagnostics;
 
 namespace MFireServer
 {
@@ -22,12 +24,13 @@ namespace MFireServer
         }
 	}
 
-	class MFireProcessor : IDisposable
+	class MFireProcessor : IDisposable, INotifyPropertyChanged
 	{
 
 		public event Action<string> LogMessage;
 		public event Action<string, LogSeverityLevel> LogMessageWithLevel;
 		public event Action<string> OutputMessage;
+		public event Action<string> DataReportReceived;
 		public event Action<double> SimulationUpdated;
 		public event Action SimulationReset;
 
@@ -35,6 +38,29 @@ namespace MFireServer
 
 		//last compute time in ms
 		public long LastComputeTime;
+
+		public TimeSpan SimulationTime
+		{ 
+			get
+			{
+				if (_engine == null)
+					return TimeSpan.Zero;
+
+				return new TimeSpan(0, 0, (int)Math.Round(_engine.GetTime() * 60.0));
+			} 
+		}
+
+		public int SimTimestep
+		{
+			get
+			{
+				return _simTimestep;
+			}
+			set
+			{
+				_simTimestep = value;
+			}
+		}
 
 		private MFireTCPServer _tcpServer;
 		private MFireEngine _engine;
@@ -52,12 +78,17 @@ namespace MFireServer
         private CommandProcessor _commandProcessor;
 
 		private bool _configBuilt = false;
+		private int _simTimestep = 10;
 
 		private MFCConfigureMFire _lastConfigCommand = null;
 
 		private System.Diagnostics.Stopwatch _timer = new System.Diagnostics.Stopwatch();
 
-		public MFireProcessor()
+        public event PropertyChangedEventHandler PropertyChanged;
+        private PropertyChangedEventArgs _eventArgs = new PropertyChangedEventArgs(null);
+
+        
+        public MFireProcessor()
 		{
 			ConnectedClients = new ObservableCollection<MFireServerClient>();
 		}
@@ -82,7 +113,20 @@ namespace MFireServer
 			RaiseLogMessage("TCP Server Started on port {0}", port);
 		}
 
-		public MFireConfig GetCurrentConfig()
+        public void Update()
+        {
+			try
+			{
+				PropertyChanged?.Invoke(this, _eventArgs);
+			}
+			catch (Exception ex)
+			{
+				Debug.Print($"Error invoking property changed on MFireProcessor {ex.Message}");
+			}
+        }
+
+
+        public MFireConfig GetCurrentConfig()
 		{
 			return _config;
 		}
@@ -280,7 +324,8 @@ namespace MFireServer
 
 			_timer.Reset();
 			_timer.Start();
-			_engine.SyncRunSimulation(10000);
+			//_engine.SyncRunSimulation(10000);
+			_engine.SyncRunSimulation(_simTimestep * 1000);
 			_timer.Stop();
 			LastComputeTime = _timer.ElapsedMilliseconds;
 		}
@@ -339,6 +384,9 @@ namespace MFireServer
 			MFHelper.AddConfigFires(_configB, _fires);
 
 			RaiseLogMessage("Loading MFire Config");
+
+			_config.TimeIntervalForReport = 10.0 / 60.0;
+			_config.TimeIncrement = 10.0;
 
 			_config.SetLegacyLoadSuccess(true);
 			_configB.SetLegacyLoadSuccess(true);
@@ -426,7 +474,10 @@ namespace MFireServer
 
 		private void OnDataReportReceived(string message)
 		{
-			RaiseOutputMessage("DataReport: " + message);
+			//RaiseOutputMessage("DataReport: " + message);
+			DataReportReceived?.Invoke(message);
+
+			Update();
 		}
 
 		private void OnEngineTickReceived(double currentTime)

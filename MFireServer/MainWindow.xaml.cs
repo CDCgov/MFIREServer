@@ -16,6 +16,7 @@ using MFireProtocol;
 using MFireDLL;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Windows.Threading;
 
 namespace MFireServer
 {
@@ -55,6 +56,9 @@ namespace MFireServer
 		//MFireServer _server;
 		//MFireTCPServer _server;
 		MFireProcessor _processor;
+
+		private DispatcherTimer _timer;
+		private DateTime _lastUpdate = DateTime.MinValue;
 		                                                                                                            
 		public MainWindow()
 		{
@@ -76,13 +80,19 @@ namespace MFireServer
 			_processor = new MFireProcessor();
 			_processor.LogMessageWithLevel += OnLogMessage;
 			_processor.OutputMessage += OnOutputMessage;
+			_processor.DataReportReceived += OnDataReportReceived;
 			_processor.SimulationUpdated += OnSimulationUpdated;
 			_processor.SimulationReset += OnSimulationReset;
 			_processor.Startup();
 
+			this.DataContext = _processor;
+
 			lstConnectedClients.DataContext = _processor.ConnectedClients;
 
-
+			_timer = new DispatcherTimer();
+			_timer.Tick += OnTimer;
+			_timer.Interval = TimeSpan.FromSeconds(1);
+			_timer.Start();
 		}
 
 		private Action _updateSimStatusDel;
@@ -140,9 +150,9 @@ namespace MFireServer
 					}
 				}
 
-				TimeSpan ts = new TimeSpan(0, 0, (int)Math.Round((elapsedMs / 1000.0)));
-				statusSimTime.StatusText = string.Format("Sim Time: {0}", ts.ToString());
-                statusSimTime.Update();
+				//TimeSpan ts = new TimeSpan(0, 0, (int)Math.Round((elapsedMs / 1000.0)));
+				//statusSimTime.StatusText = string.Format("Sim Time: {0}", ts.ToString());
+				//statusSimTime.Update();
 
 				statusNumAirways.StatusText = string.Format("Num Airways: {0}", numAirways);
 				statusNumAirways.Update();
@@ -230,6 +240,9 @@ namespace MFireServer
 			}
 			txtSimStatus.Text = status;
 
+
+			_lastUpdate = DateTime.Now;
+
             UpdateErrorDisplay();
         }
 
@@ -237,6 +250,21 @@ namespace MFireServer
 		{
 			AppendLog(msg, severity);
 		}
+
+		private void OnDataReportReceived(string dataReport)
+		{
+			if (dataReport == null || dataReport.Length <= 0)
+				return;
+
+            //invoke on main thread
+            if (App.Current.Dispatcher.Thread != System.Threading.Thread.CurrentThread)
+            {
+                App.Current.Dispatcher.BeginInvoke((Action<string>)OnDataReportReceived, dataReport);
+                return;
+            }
+
+			txtDataReport.Text = dataReport;
+        }
 
 		private void OnOutputMessage(string msg)
 		{
@@ -361,22 +389,60 @@ namespace MFireServer
 
 		protected override void OnClosed(EventArgs e)
 		{
-			if (_processor != null)
-			{
-				_processor.Shutdown();
-				_processor = null;
-			}
+			Cleanup();
 
 			base.OnClosed(e);
 		}
 
 		private void OnClosing(object sender, System.ComponentModel.CancelEventArgs e)
 		{
-			if (_processor != null)
+			Cleanup();
+		}
+
+		private void Cleanup()
+		{
+            if (_processor != null)
+            {
+                _processor.Shutdown();
+                _processor = null;
+            }
+
+			if (_timer != null)
 			{
-				_processor.Shutdown();
-				_processor = null;
-			}			
+				_timer.Stop();
+				_timer.Tick -= OnTimer;
+				_timer = null;
+			}
+        }
+
+		private void OnTimer(object sender, EventArgs e)
+		{
+			var elapsed = DateTime.Now - _lastUpdate;
+			var totalSeconds = elapsed.TotalSeconds;
+			
+			if (_lastUpdate == DateTime.MinValue)
+			{
+                statusLastUpdate.StatusText = "Last Update: Never";
+            }
+			else if (totalSeconds > 600)
+			{
+                statusLastUpdate.StatusText = "Last Update: >10m ago";
+            }
+			else
+			{
+				statusLastUpdate.StatusText = string.Format("Last Update: {0}s ago", (int)totalSeconds);
+			}
+
+			if (totalSeconds > 3)
+			{
+				txtSimTime.Foreground = Brushes.Red;
+			}
+			else
+			{
+				txtSimTime.Foreground = Brushes.Green;
+			}
+
+			statusLastUpdate.Update();
 		}
 
 		private void OnClickedExit(object sender, RoutedEventArgs e)
